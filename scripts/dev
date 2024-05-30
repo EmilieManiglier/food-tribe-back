@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then
+  set -o xtrace
+fi
+
+if [[ "${1-}" =~ ^-*h(elp)?$ ]]; then
+  echo 'Usage: ./dev
+
+Starts development server
+
+'
+  exit
+fi
+
+cd "$(dirname "$0")"
+
+main() {
+  # kill previously running servers
+  kill -9 "$(lsof -i :5173 -t)" 2>/dev/null || true
+
+  sleep 1
+
+  (
+    cd .. \
+      && echo "[backend] running bun install" \
+      && bun install > /dev/null \
+      && node ace migration:run
+  )
+
+  foreman start --procfile ../Procfile.dev
+}
+
+main "$@"
