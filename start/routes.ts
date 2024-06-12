@@ -18,6 +18,6 @@ router
         router.post('register', [AuthController, 'register'])
         router.post('login', [AuthController, 'login'])
       })
-      .prefix('/users')
+      .prefix('/auth')
   })
   .prefix('api/v1')
