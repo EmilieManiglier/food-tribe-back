@@ -14,14 +14,9 @@ export default class AuthController {
 
     const user = await User.verifyCredentials(email, password)
     const token = await User.accessTokens.create(user)
-    const serializedUser = user.serialize({
-      fields: {
-        omit: ['password', 'createdAt', 'updatedAt'],
-      },
-    })
 
     return {
-      user: serializedUser,
+      user,
       token: token.toJSON().token,
     }
   }

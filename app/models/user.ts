@@ -14,10 +14,10 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column({ isPrimary: true })
   declare id: number
 
-  @column.dateTime({ autoCreate: true })
+  @column.dateTime({ autoCreate: true, serializeAs: null })
   declare createdAt: DateTime
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  @column.dateTime({ autoCreate: true, autoUpdate: true, serializeAs: null })
   declare updatedAt: DateTime
 
   @column()
@@ -29,7 +29,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare lastname: string
 
-  @column()
+  @column({ serializeAs: null })
   declare password: string
 
   @column()
