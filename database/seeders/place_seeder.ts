@@ -1,6 +1,7 @@
+import { BaseSeeder } from '@adonisjs/lucid/seeders'
+
 import Category from '#models/category'
 import Place from '#models/place'
-import { BaseSeeder } from '@adonisjs/lucid/seeders'
 
 export default class PlaceSeeder extends BaseSeeder {
   async run() {

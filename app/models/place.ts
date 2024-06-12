@@ -2,12 +2,16 @@ import { DateTime } from 'luxon'
 import { BaseModel, column, manyToMany } from '@adonisjs/lucid/orm'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 import Category from '#models/category'
+import User from '#models/user'
 
 export default class Place extends BaseModel {
   @manyToMany(() => Category, {
     serializeAs: 'categories',
   })
   declare categories: ManyToMany<typeof Category>
+
+  @manyToMany(() => User, { serializeAs: null })
+  declare users: ManyToMany<typeof User>
 
   @column({ isPrimary: true })
   declare id: number

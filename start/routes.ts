@@ -7,6 +7,7 @@
 |
 */
 
+import { middleware } from '#start/kernel'
 import router from '@adonisjs/core/services/router'
 
 const PlaceController = () => import('#controllers/place_controller')
@@ -21,8 +22,10 @@ router
       })
       .prefix('/auth')
 
-    router.group(() => {
-      router.get('places', [PlaceController, 'index'])
-    })
+    router
+      .group(() => {
+        router.get('places', [PlaceController, 'index'])
+      })
+      .use(middleware.auth())
   })
   .prefix('api/v1')
