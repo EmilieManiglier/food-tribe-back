@@ -24,8 +24,12 @@ router
 
     router
       .group(() => {
-        router.get('places', [PlaceController, 'index'])
+        router.get('/', [PlaceController, 'index'])
+        router.get('/:id', [PlaceController, 'show'])
+        router.post('/', [PlaceController, 'store'])
+        router.put('/:id', [PlaceController, 'update'])
       })
+      .prefix('places')
       .use(middleware.auth())
   })
   .prefix('api/v1')
