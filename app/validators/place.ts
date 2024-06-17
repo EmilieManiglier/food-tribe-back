@@ -5,5 +5,11 @@ export const placeValidator = vine.compile(
     name: vine.string(),
     lng: vine.number(),
     lat: vine.number(),
+    categories: vine.array(
+      vine.object({
+        id: vine.number(),
+        name: vine.string(),
+      })
+    ),
   })
 )

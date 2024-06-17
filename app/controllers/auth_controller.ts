@@ -5,10 +5,15 @@ import { registerValidator, loginValidator } from '#validators/auth'
 import User from '#models/user'
 
 export default class AuthController {
-  async register({ request, response }: HttpContext) {
+  async register({ request }: HttpContext) {
     const payload = await request.validateUsing(registerValidator)
     const user = await User.create(payload)
-    return response.created(user)
+    const token = await User.accessTokens.create(user)
+
+    return {
+      ...user.toJSON(),
+      token: token.toJSON().token,
+    }
   }
 
   async login({ request }: HttpContext) {
@@ -18,7 +23,7 @@ export default class AuthController {
     const token = await User.accessTokens.create(user)
 
     return {
-      user,
+      ...user.toJSON(),
       token: token.toJSON().token,
     }
   }
