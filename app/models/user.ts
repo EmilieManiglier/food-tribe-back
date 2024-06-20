@@ -4,8 +4,8 @@ import hash from '@adonisjs/core/services/hash'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import { compose } from '@adonisjs/core/helpers'
-import Place from '#models/place'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
+import FriendGroup from '#models/friend_group'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -13,8 +13,8 @@ const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
 })
 
 export default class User extends compose(BaseModel, AuthFinder) {
-  @manyToMany(() => Place, { serializeAs: null })
-  declare places: ManyToMany<typeof Place>
+  @manyToMany(() => FriendGroup)
+  declare friendGroups: ManyToMany<typeof FriendGroup>
 
   @column({ isPrimary: true })
   declare id: number
@@ -36,6 +36,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @column({ serializeAs: null })
   declare password: string
+
+  @column()
+  declare streetAddress: string
 
   @column()
   declare city: string

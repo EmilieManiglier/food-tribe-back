@@ -1,97 +1,92 @@
-import Category from '#models/category'
+import BaseController from '#controllers/base_controller'
 import Place from '#models/place'
 import User from '#models/user'
 import { placeValidator } from '#validators/place'
 import type { HttpContext } from '@adonisjs/core/http'
 
-// TODO : Refactor this controller to be more DRY
-export default class PlaceController {
-  async index({ response, auth }: HttpContext) {
-    // If the user is authenticated, returns the places related to the user
-    if (auth.user) {
-      const user = await User.findOrFail(auth.user.id)
-      await user.load('places', (placesQuery) => {
-        placesQuery.preload('categories')
+export default class PlaceController extends BaseController {
+  private async fetchPlaces(friendGroupId?: number): Promise<Place[]> {
+    let query = Place.query().preload('categories')
+    if (friendGroupId) {
+      query = query.whereHas('friendGroup', (placeQuery) => {
+        placeQuery.where('id', friendGroupId)
       })
-      return response.ok(user.places)
     }
+    return await query.exec()
   }
 
-  async show({ response, params, auth }: HttpContext) {
-    if (auth.user) {
-      const user = await User.findOrFail(auth.user.id)
-      await user.load('places', (placesQuery) => {
-        placesQuery.preload('categories')
-      })
-      const place = user.places.find((p) => p.id.toString() === params.id)
+  // Check if the user has access to the place
+  private async authorizePlace(user: User, placeId: string, response: HttpContext['response']) {
+    await user.load('friendGroups', (friendGroupsQuery) => {
+      friendGroupsQuery.preload('places')
+    })
 
-      if (place) {
-        return response.ok(place)
-      } else {
-        return response.unauthorized('You do not have access to this place')
-      }
+    // Check if the place is in one of the user's friend groups
+    const placeInFriendGroup = user.friendGroups.find((friendGroup) => {
+      return friendGroup.places.find((place) => place.id.toString() === placeId)
+    })
+
+    if (!placeInFriendGroup) {
+      return response.unauthorized({ error: 'Unauthorized access to the place' })
     }
+
+    // If the place is in one of the user's friend groups, return it
+    return await Place.findOrFail(placeId)
   }
 
-  async store({ request, response, auth }: HttpContext) {
-    if (auth.user) {
-      const payload = await request.validateUsing(placeValidator)
-      const user = await User.findOrFail(auth.user.id)
-      const place = new Place()
-      place.fill(payload)
-      await user.related('places').save(place)
+  async index({ response, request }: HttpContext) {
+    const { friendGroupId } = request.all()
+    const places = await this.fetchPlaces(friendGroupId)
+    return response.ok(places)
+  }
 
-      // Find or create categories and attach them to the place
-      const placeCategories = request.input('categories', [])
-      const categories = await Promise.all(
-        placeCategories.map(async ({ id }) => Category.firstOrCreate({ id }))
-      )
-      await place.related('categories').attach(categories.map((category) => category.id))
+  async store({ request, response }: HttpContext) {
+    const payload = await request.validateUsing(placeValidator)
+    const place = await Place.create(payload)
+    await place.related('categories').attach(payload.categories.map((category) => category.id))
 
-      // Load the categories relationship to return it in the response
-      await place.load('categories')
+    // Load the categories relationship to return it in the response
+    await place.load('categories')
 
-      return response.created(place)
-    }
+    return response.created(place)
   }
 
   async update({ request, response, params, auth }: HttpContext) {
-    if (auth.user) {
-      const payload = await request.validateUsing(placeValidator)
-      const user = await User.findOrFail(auth.user.id)
-      await user.load('places')
-      const place = user.places.find((p) => p.id.toString() === params.id)
+    const payload = await request.validateUsing(placeValidator)
 
-      if (place) {
-        // Load the categories relationship to return it in the response
-        await place.load('categories')
-        place.merge(payload)
-        await place.save()
-        return response.ok(place)
-      } else {
-        return response.unauthorized('You do not have access to this place')
-      }
-    }
+    // Find the authenticated user and its friend groups
+    const user = await this.getAuthenticatedUser(auth, response)
+    if (!user) return
+
+    // If the place is in one of the user's friend groups, update it
+    const place = await this.authorizePlace(user, params.id, response)
+    if (!place) return
+    place.merge(payload)
+    await place.save()
+
+    // Update the categories relationship
+    await place.related('categories').sync(payload.categories.map((category) => category.id))
+
+    // Load the categories relationship to return it in the response
+    await place.load('categories')
+
+    return response.ok(place)
   }
 
   async destroy({ response, params, auth }: HttpContext) {
-    if (auth.user) {
-      const user = await User.findOrFail(auth.user.id)
-      await user.load('places')
-      const place = user.places.find((p) => p.id.toString() === params.id)
+    // Find the authenticated user and its friend groups
+    const user = await this.getAuthenticatedUser(auth, response)
+    if (!user) return
 
-      if (place) {
-        // Removes the relationship between the user and the place
-        await user.related('places').detach([place.id])
+    // If the place is in one of the user's friend groups, delete it
+    const place = await this.authorizePlace(user, params.id, response)
+    if (!place) return
 
-        // Removes the relationship between the place and its categories
-        await place.related('categories').detach()
+    // Removes the relationship between the place and its categories
+    await place.related('categories').detach()
 
-        await place.delete()
-        return response.noContent()
-      } else {
-        return response.unauthorized('You do not have access to this place')
-      }
-    }
+    await place.delete()
+
+    return response.noContent()
   }
 }
