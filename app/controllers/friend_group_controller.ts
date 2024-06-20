@@ -1,12 +1,20 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import FriendGroup from '#models/friend_group'
 import User from '#models/user'
+import BaseController from '#controllers/base_controller'
 
-export default class FriendGroupController {
+export default class FriendGroupController extends BaseController {
+  private async getFriendGroupOfUser(user: User, groupId: number): Promise<FriendGroup> {
+    await user.load('friendGroups', (friendGroupsQuery) => {
+      friendGroupsQuery.where('id', groupId)
+    })
+    return user.friendGroups[0]
+  }
+
   async index({ response, auth }: HttpContext) {
+    const user = await this.getAuthenticatedUser(auth, response)
     // If the user is authenticated, returns the friend groups of the user
-    if (auth.user) {
-      const user = await User.findOrFail(auth.user.id)
+    if (user) {
       await user.load('friendGroups', (friendGroupsQuery) => {
         friendGroupsQuery.preload('users')
       })
@@ -30,39 +38,29 @@ export default class FriendGroupController {
   }
 
   async show({ response, params, auth }: HttpContext) {
-    if (auth.user) {
-      const user = await User.findOrFail(auth.user.id)
-      await user.load('friendGroups', (friendGroupsQuery) => {
-        friendGroupsQuery.where('id', params.id)
-      })
-
-      const friendGroup = user.friendGroups[0]
+    const user = await this.getAuthenticatedUser(auth, response)
+    if (user) {
+      const friendGroup = await this.getFriendGroupOfUser(user, params.id)
       if (friendGroup) {
         return response.ok(friendGroup)
       } else {
         return response.notFound('Friend group not found')
       }
-    } else {
-      return response.unauthorized('User is not authenticated')
     }
   }
 
   // Update the name of an existing friend group of the authenticated user
   // If the user is not the admin of the friend group, return a 401 status code
   async update({ request, response, params, auth }: HttpContext) {
-    if (auth.user) {
-      const user = await User.findOrFail(auth.user.id)
-      await user.load('friendGroups', (friendGroupsQuery) => {
-        friendGroupsQuery.where('id', params.id)
-      })
+    const user = await this.getAuthenticatedUser(auth, response)
+    if (user) {
+      const friendGroup = await this.getFriendGroupOfUser(user, params.id)
 
-      const friendGroup = user.friendGroups[0]
       if (friendGroup) {
         if (friendGroup.admin === user.id) {
           const updatedData = request.only(['name', 'description'])
           friendGroup.merge(updatedData)
           await friendGroup.save()
-
           return response.ok(friendGroup)
         } else {
           return response.unauthorized('You are not the admin of this friend group')
@@ -74,9 +72,9 @@ export default class FriendGroupController {
   }
 
   async store({ request, response, auth }: HttpContext) {
-    if (auth.user) {
+    const user = await this.getAuthenticatedUser(auth, response)
+    if (user) {
       const payload = request.only(['name', 'description'])
-      const user = await User.findOrFail(auth.user.id)
       const friendGroup = new FriendGroup()
       friendGroup.fill(payload)
 
@@ -90,13 +88,9 @@ export default class FriendGroupController {
 
   async destroy({ response, params, auth }: HttpContext) {
     // Delete the friend group if the authenticated user is the admin
-    if (auth.user) {
-      const user = await User.findOrFail(auth.user.id)
-      await user.load('friendGroups', (friendGroupsQuery) => {
-        friendGroupsQuery.where('id', params.id)
-      })
-
-      const friendGroup = user.friendGroups[0]
+    const user = await this.getAuthenticatedUser(auth, response)
+    if (user) {
+      const friendGroup = await this.getFriendGroupOfUser(user, params.id)
       if (friendGroup) {
         if (friendGroup.admin === user.id) {
           // Remove the relationship between the user and the friend group
