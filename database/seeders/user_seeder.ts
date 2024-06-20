@@ -12,6 +12,7 @@ export default class UserSeeder extends BaseSeeder {
       firstname: faker.person.firstName(),
       lastname: faker.person.lastName(),
       password: 'password',
+      streetAddress: faker.location.street(),
       city: faker.location.city(),
       zipCode: faker.location.zipCode(),
       country: 'france',

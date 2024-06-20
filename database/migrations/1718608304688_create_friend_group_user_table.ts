@@ -1,12 +1,12 @@
 import { BaseSchema } from '@adonisjs/lucid/schema'
 
-export default class UserPlacePivot extends BaseSchema {
-  protected tableName = 'place_user'
+export default class FriendGroupUser extends BaseSchema {
+  protected tableName = 'friend_group_user'
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
+      table.integer('friend_group_id').unsigned().references('id').inTable('friend_groups')
       table.integer('user_id').unsigned().references('id').inTable('users')
-      table.integer('place_id').unsigned().references('id').inTable('places')
       table.timestamps(true)
     })
   }

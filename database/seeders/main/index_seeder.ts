@@ -9,6 +9,8 @@ export default class MainSeeder extends BaseSeeder {
     await this.seed(await import('#database/seeders/user_seeder'))
     await this.seed(await import('#database/seeders/category_seeder'))
     await this.seed(await import('#database/seeders/place_seeder'))
-    await this.seed(await import('#database/seeders/place_user_seeder'))
+    await this.seed(await import('#database/seeders/friend_group_seeder'))
+    await this.seed(await import('#database/seeders/friend_group_place_seeder'))
+    await this.seed(await import('#database/seeders/friend_group_user_seeder'))
   }
 }

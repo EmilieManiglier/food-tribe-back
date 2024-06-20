@@ -13,6 +13,13 @@ export default class HttpExceptionHandler extends ExceptionHandler {
    * response to the client
    */
   async handle(error: unknown, ctx: HttpContext) {
+    /**
+     * Self handle the validation exception
+     */
+    if (error.code === 'E_UNAUTHORIZED_ACCESS') {
+      return ctx.response.status(401).send({ error: 'Token expired' })
+    }
+
     return super.handle(error, ctx)
   }
 

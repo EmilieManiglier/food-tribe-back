@@ -10,16 +10,27 @@ export default class PlaceSeeder extends BaseSeeder {
         name: 'Le goût de Kyun',
         lat: 45.7674630890759,
         lng: 4.830760359631816,
+        streetAddress: 'Rue Constantine',
+        zipCode: '69001',
+        city: 'Lyon',
       },
       {
         name: 'Messob',
         lat: 45.76713378601963,
         lng: 4.85505044453237,
+        streetAddress: 'Rue Masséna',
+        description: 'Le meilleur restaurant éthiopien de Lyon',
+        zipCode: '69006',
+        city: 'Lyon',
       },
       {
         name: 'Le petit Brivadois',
         lat: 45.75979007339314,
         lng: 4.872778676852256,
+        description: 'Ma boulangerie préférée',
+        streetAddress: 'Rue François Gillet',
+        zipCode: '69003',
+        city: 'Lyon',
       },
     ]
     const createdPlaces = await Place.createMany(places)
