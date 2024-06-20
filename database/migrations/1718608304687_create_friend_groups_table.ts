@@ -19,9 +19,9 @@ export default class FriendGroups extends BaseSchema {
   }
 
   async down() {
-    this.schema.dropTable(this.tableName)
     this.schema.table(this.placesTableName, (table) => {
       table.dropColumn('friend_group_id')
     })
+    this.schema.dropTable(this.tableName)
   }
 }
