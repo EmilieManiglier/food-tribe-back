@@ -9,9 +9,9 @@ export default class FriendGroupUserSeeder extends BaseSeeder {
     const users = await User.query().limit(5)
     await firstGroup.related('users').saveMany(users)
 
-    // Assign the three users to the second group
+    // Assign three users to the second group, with user 2 as the admin
     const secondGroup = await FriendGroup.findByOrFail('id', 2)
-    const otherUsers = await User.query().limit(3).offset(3)
+    const otherUsers = await User.query().whereIn('id', [4, 5, 6]).orWhere('id', 2)
     await secondGroup.related('users').saveMany(otherUsers)
   }
 }

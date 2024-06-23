@@ -93,9 +93,23 @@ export default class FriendGroupController extends BaseController {
       const friendGroup = await this.getFriendGroupOfUser(user, params.id)
       if (friendGroup) {
         if (friendGroup.admin === user.id) {
-          // Remove the relationship between the user and the friend group
+          // Remove the relationship between the users and the friend group
+          await friendGroup.related('users').detach()
+
           await user.related('friendGroups').detach([friendGroup.id])
+
+          // Find all places related to the friend group
+          const places = await friendGroup.related('places').query()
+
+          // For each place, detach all categories and then delete the place
+          for (const place of places) {
+            await place.related('categories').detach() // Assuming a many-to-many relationship with categories
+            await place.delete()
+          }
+
+          // Finally, delete the friend group itself
           await friendGroup.delete()
+
           return response.noContent()
         } else {
           return response.unauthorized('You are not the admin of this friend group')

@@ -34,8 +34,8 @@ export default class extends BaseSchema {
   }
 
   async down() {
+    this.schema.dropTable(this.pivotTableName)
     this.schema.dropTable(this.placesTableName)
     this.schema.dropTable(this.categoriesTableName)
-    this.schema.dropTable(this.pivotTableName)
   }
 }
