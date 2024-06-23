@@ -29,9 +29,9 @@ test.group('Place controller', (group) => {
   })
 
   test('updates a place', async ({ client }): Promise<void> => {
-    payload = { ...payload, name: 'New name' }
-    const response = await client.put('/api/v1/places/1').json(payload).loginAs(user)
-    response.assertStatus(200)
+    payload = { ...payload, name: 'New place name' }
+    const response = await client.put('/api/v1/places/2').json(payload).loginAs(user)
+    response.assertBodyContains({ name: 'New place name' })
   })
 
   test('deletes a place', async ({ client }): Promise<void> => {
